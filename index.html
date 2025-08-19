@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoAI - Environmental Intelligence for South Africa</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #334155;
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            color: #10b981;
+            font-size: 2rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        .agent-status-bar {
+            background: rgba(30, 41, 59, 0.8);
+            border-bottom: 1px solid #475569;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .agent-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .agent-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 20px;
+            border: 1px solid #334155;
+        }
+
+        .agent-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .agent-status.active {
+            background: #10b981;
+        }
+
+        .agent-status.processing {
+            background: #f59e0b;
+        }
+
+        .agent-status.idle {
+            background: #6b7280;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            backdrop-filter: blur(5px);
+        }
+
+        .tab-btn:hover {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #10b981;
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-color: #10b981;
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .module {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .module.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .agent-control-panel {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .agent-card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-2px);
+            border-color: #10b981;
+        }
+
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .agent-name {
+            color: #10b981;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .agent-toggle {
+            background: #374151;
+            border: none;
+            border-radius: 20px;
+            width: 50px;
+            height: 25px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .agent-toggle.active {
+            background: #10b981;
+        }
+
+        .agent-toggle::after {
+            content: '';
+            position: absolute;
+            width: 21px;
+            height: 21px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .agent-toggle.active::after {
+            transform: translateX(25px);
+        }
+
+        .agent-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 0.5rem;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+        }
+
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #10b981;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .agent-log {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 150px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            border: 1px solid #334155;
+        }
+
+        .log-entry {
+            margin-bottom: 0.25rem;
+            color: #94a3b8;
+        }
+
+        .log-entry.success {
+            color: #10b981;
+        }
+
+        .log-entry.warning {
+            color: #f59e0b;
+        }
+
+        .log-entry.error {
+            color: #ef4444;
+        }
+
+        .log-entry.info {
+            color: #3b82f6;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid #475569;
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            color: #10b981;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        .map-container {
+            height: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            border: 1px solid #475569;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #10b981;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .alert {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #fecaca;
+            position: relative;
+        }
+
+        .alert.warning {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: #f59e0b;
+            color: #fde68a;
+        }
+
+        .alert.info {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+            color: #bfdbfe;
+        }
+
+        .alert.success {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #10b981;
+            color: #a7f3d0;
+        }
+
+        .alert-timestamp {
+            position: absolute;
+            top: 0.5rem;
+            right: 1rem;
+            font-size: 0.7rem;
+            opacity: 0.7;
+        }
+
+        .notification-panel {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 9999;
+        }
+
+        .notification {
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            backdrop-filter: blur(10px);
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        .notification.success {
+            border-left: 4px solid #10b981;
+        }
+
+        .notification.warning {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .notification.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .notification.info {
+            border-left: 4px solid #3b82f6;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .controls {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .control-group label {
+            color: #94a3b8;
+            min-width: 100px;
+        }
+
+        select, input[type="date"], input[type="range"] {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #e2e8f0;
+            min-width: 150px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #374151, #1f2937);
+        }
+
+        .btn.danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-tabs {
+                margin: 1rem;
+            }
+            
+            .content {
+                padding: 1rem;
+            }
+
+            .notification-panel {
+                width: calc(100% - 40px);
+                right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖🌿 EcoAI - Environmental Intelligence</h1>
+        <p>Autonomous AI Agents for Real-Time Environmental Intelligence Across SA</p>
+    </div>
+
+    <div class="agent-status-bar">
+        <div class="agent-group">
+            <span style="color: #94a3b8; font-weight: 600;">Monitoring Agents:</span>
+            <div class="agent-indicator">
+                <div class="agent-status active"></div>
+                <span>SPOT Satellite</span>
+            </div>
+            <div class="agent-indicator">
+                <div class="agent-status active"></div>
+                <span>SAWS Weather</span>
+            </div>
+            <div class="agent-indicator">
+                <div class="agent-status processing"></div>
+                <span>DEA Sensors</span>
+            </div>
+        </div>
+        <div class="agent-group">
+            <span style="color: #94a3b8; font-weight: 600;">Decision Agents:</span>
+            <div class="agent-indicator">
+                <div class="agent-status active"></div>
+                <span>Risk Assessment</span>
+            </div>
+            <div class="agent-indicator">
+                <div class="agent-status active"></div>
+                <span>Resource Allocation</span>
+            </div>
+        </div>
+        <div class="agent-group">
+            <span style="color: #94a3b8; font-weight: 600;">Action Agents:</span>
+            <div class="agent-indicator">
+                <div class="agent-status processing"></div>
+                <span>Disaster Management</span>
+            </div>
+            <div class="agent-indicator">
+                <div class="agent-status active"></div>
+                <span>Communication</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="showModule('agents')">🤖 Agent Control</button>
+        <button class="tab-btn" onclick="showModule('deforestation')">🌲 Deforestation</button>
+        <button class="tab-btn" onclick="showModule('wildfire')">🔥 Veld Fire Risk</button>
+        <button class="tab-btn" onclick="showModule('heat-island')">🏙️ Urban Heat</button>
+        <button class="tab-btn" onclick="showModule('crops')">🌾 Crop Health</button>
+        <button class="tab-btn" onclick="showModule('coastal')">🌊 Coastal Erosion</button>
+    </div>
+
+    <div class="content">
+        <!-- Agent Control Module -->
+        <div id="agents" class="module active">
+            <div class="agent-control-panel">
+                <h3 style="color: #10b981; margin-bottom: 2rem; text-align: center;">AI Agent Control Center - South Africa</h3>
+                
+                <div class="control-group" style="justify-content: center; margin-bottom: 2rem;">
+                    <button class="btn" onclick="startAllAgents()">🚀 Start All Agents</button>
+                    <button class="btn secondary" onclick="pauseAllAgents()">⏸️ Pause All</button>
+                    <button class="btn danger" onclick="emergencyStop()">🛑 Emergency Stop</button>
+                </div>
+                
+                <div class="agent-grid">
+                    <!-- Monitoring Agents -->
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-name">🛰️ SPOT Satellite Agent</div>
+                            <button class="agent-toggle active" onclick="toggleAgent('satellite', this)"></button>
+                        </div>
+                        <div class="agent-metrics">
+                            <div class="metric">
+                                <div class="metric-value" id="satellite-collections">847</div>
+                                <div class="metric-label">Collections/Day</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="satellite-accuracy">96.2%</div>
+                                <div class="metric-label">Accuracy</div>
+                            </div>
+                        </div>
+                        <div class="agent-log" id="satellite-log">
+                            <div class="log-entry success">[14:23:07] SPOT-7 data acquired for Kruger National Park</div>
+                            <div class="log-entry info">[14:22:45] Processing Sentinel-2 imagery for deforestation in Limpopo</div>
+                            <div class="log-entry success">[14:21:33] Change detection completed - 8 new alerts for Eastern Cape</div>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-name">🌤️ SAWS Weather Agent</div>
+                            <button class="agent-toggle active" onclick="toggleAgent('weather', this)"></button>
+                        </div>
+                        <div class="agent-metrics">
+                            <div class="metric">
+                                <div class="metric-value" id="weather-stations">487</div>
+                                <div class="metric-label">Active Stations</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="weather-updates">145</div>
+                                <div class="metric-label">Updates/Hour</div>
+                            </div>
+                        </div>
+                        <div class="agent-log" id="weather-log">
+                            <div class="log-entry warning">[14:23:15] High wind speeds in Western Cape - Fire risk elevated</div>
+                            <div class="log-entry info">[14:22:50] Heat wave detected in Johannesburg - Urban heat analysis triggered</div>
+                            <div class="log-entry success">[14:21:28] Forecast updated for drought conditions in Northern Cape</div>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-name">📡 DEA Ground Sensor Agent</div>
+                            <button class="agent-toggle active" onclick="toggleAgent('sensors', this)"></button>
+                        </div>
+                        <div class="agent-metrics">
+                            <div class="metric">
+                                <div class="metric-value" id="sensor-count">2,156</div>
+                                <div class="metric-label">Active Sensors</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="sensor-uptime">98.7%</div>
+                                <div class="metric-label">Uptime</div>
+                            </div>
+                        </div>
+                        <div class="agent-log" id="sensors-log">
+                            <div class="log-entry error">[14:23:02] Air quality sensor offline in Secunda - Dispatching technician</div>
+                            <div class="log-entry success">[14:22:41] Soil moisture sensors calibrated in Free State maize belt</div>
+                            <div class="log-entry warning">[14:21:55] PM2.5 spike detected in Vaal Triangle industrial area</div>
+                        </div>
+                    </div>
+
+                    <!-- Decision Making Agents -->
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-name">🎯 Risk Assessment Agent</div>
+                            <button class="agent-toggle active" onclick="toggleAgent('risk', this)"></button>
+                        </div>
+                        <div class="agent-metrics">
+                            <div class="metric">
+                                <div class="metric-value" id="risk-assessments">234</div>
+                                <div class="metric-label">Assessments/Day</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="risk-accuracy">93.1%</div>
+                                <div class="metric-label">Prediction Accuracy</div>
+                            </div>
+                        </div>
+                        <div class="agent-log" id="risk-log">
+                            <div class="log-entry warning">[14:23:12] High veld fire risk identified in Mpumalanga highlands</div>
+                            <div class="log-entry success">[14:22:37] Drought risk model updated with new rainfall data</div>
+                            <div class="log-entry info">[14:21:44] Coastal erosion probability increased for KZN south coast</div>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-name">⚖️ Resource Allocation Agent</div>
+                            <button class="agent-toggle active" onclick="toggleAgent('allocation', this)"></button>
+                        </div>
+                        <div class="agent-metrics">
+                            <div class="metric">
+                                <div class="metric-value" id="allocation-decisions">89</div>
+                                <div class="metric-label">Decisions/Day</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="allocation-efficiency">91.3%</div>
+                                <div class="metric-label">Efficiency</div>
+                            </div>
+                        </div>
+                        <div class="agent-log" id="allocation-log">
+                            <div class="log-entry success">[14:23:08] Fire helicopters deployed to Western Cape high-risk areas</div>
+                            <div class="log-entry info">[14:22:33] Water tankers allocated to drought-affected Karoo communities</div>
+                            <div class="log-entry warning">[14:21:29] Additional ground crews requested for Gauteng air quality monitoring</div>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-name">🚨 Alert Prioritization Agent</div>
+                            <button class="agent-toggle active" onclick="toggleAgent('alerts', this)"></button>
+                        </div>
+                        <div class="agent-metrics">
+                            <div class="metric">
+                                <div class="metric-value" id="alert-processed">1,342</div>
+                                <div class="metric-label">Alerts Processed</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="alert-response">1.8s</div>
+                                <div class="metric-label">Avg Response Time</div>
+                            </div>
+                        </div>
+                        <div class="agent-log" id="alerts-log">
+                            <div class="log-entry error">[14:23:01] CRITICAL: Veld fire alert elevated for Knysna area</div>
+                            <div class="log-entry warning">[14:22:48] 15 medium-priority drought alerts queued for Northern Cape</div>
+                            <div class="log-entry success">[14:21:51] Air quality alert system updated for Johannesburg metro</div>
+                        </div>
+                    </div>
+
+                    <!-- Action Taking Agents -->
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-name">🆘 Disaster Management Agent</div>
+                            <button class="agent-toggle active" onclick="toggleAgent('emergency', this)"></button>
+                        </div>
+                        <div class="agent-metrics">
+                            <div class="metric">
+                                <div class="metric-value" id="emergency-responses">23</div>
+                                <div class="metric-label">Responses Today</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="emergency-time">6.2m</div>
+                                <div class="metric-label">Avg Response Time</div>
+                            </div>
+                        </div>
+                        <div class="agent-log" id="emergency-log">
+                            <div class="log-entry error">[14:23:05] Emergency protocol activated for veld fire in Overberg</div>
+                            <div class="log-entry success">[14:22:39] Evacuation routes calculated for coastal communities</div>
+                            <div class="log-entry warning">[14:21:47] Pre-positioning emergency resources near high-risk farming areas</div>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-name">📢 Communication Agent</div>
+                            <button class="agent-toggle active" onclick="toggleAgent('communication', this)"></button>
+                        </div>
+                        <div class="agent-metrics">
+                            <div class="metric">
+                                <div class="metric-value" id="comm-messages">2,847</div>
+                                <div class="metric-label">Messages Sent</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="comm-stakeholders">156</div>
+                                <div class="metric-label">Active Stakeholders</div>
+                            </div>
+                        </div>
+                        <div class="agent-log" id="communication-log">
+                            <div class="log-entry success">[14:23:11] SMS alerts sent to 12,000 residents in fire-prone areas</div>
+                            <div class="log-entry info">[14:22:44] Environmental report delivered to provincial authorities</div>
+                            <div class="log-entry success">[14:21:36] Farmer networks notified of drought conditions</div>
+                        </div>
+                    </div>
+
+                    <!-- Learning Agents -->
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-name">🧠 Pattern Recognition Agent</div>
+                            <button class="agent-toggle active" onclick="toggleAgent('pattern', this)"></button>
+                        </div>
+                        <div class="agent-metrics">
+                            <div class="metric">
+                                <div class="metric-value" id="pattern-models">8</div>
+                                <div class="metric-label">Active Models</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="pattern-accuracy">94.5%</div>
+                                <div class="metric-label">Prediction Accuracy</div>
+                            </div>
+                        </div>
+                        <div class="agent-log" id="pattern-log">
+                            <div class="log-entry success">[14:23:04] New drought pattern identified in historical Karoo data</div>
+                            <div class="log-entry info">[14:22:31] Seasonal fire model updated with 2024 Western Cape data</div>
+                            <div class="log-entry warning">[14:21:42] Unusual heat pattern detected in Johannesburg CBD</div>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-name">📊 Historical Trend Agent</div>
+                            <button class="agent-toggle active" onclick="toggleAgent('trends', this)"></button>
+                        </div>
+                        <div class="agent-metrics">
+                            <div class="metric">
+                                <div class="metric-value" id="trend-analyses">189</div>
+                                <div class="metric-label">Trend Analyses</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="trend-span">30</div>
+                                <div class="metric-label">Years of Data</div>
+                            </div>
+                        </div>
+                        <div class="agent-log" id="trends-log">
+                            <div class="log-entry success">[14:23:06] Long-term rainfall trends updated for all provinces</div>
+                            <div class="log-entry info">[14:22:52] Climate change impact analysis completed for agricultural regions</div>
+                            <div class="log-entry warning">[14:21:43] Accelerating coastal erosion trend detected along Garden Route</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deforestation Module -->
+        <div id="deforestation" class="module">
+            <div class="controls">
+                <h3 style="color: #10b981; margin-bottom: 1rem;">AI-Powered Deforestation Tracking - SA Indigenous Forests</h3>
+                <div class="control-group">
+                    <label>Region:</label>
+                    <select id="deforest-region">
+                        <option>Knysna-Amatole Forests</option>
+                        <option>Mpumalanga Escarpment</option>
+                        <option>KwaZulu-Natal Coastal Forests</option>
+                        <option>Limpopo Woodlands</option>
+                        <option>Eastern Cape Indigenous Forests</option>
+                    </select>
+                    <label>Time Period:</label>
+                    <input type="date" id="start-date" value="2020-01-01">
+                    <label>to</label>
+                    <input type="date" id="end-date" value="2024-01-01">
+                    <button class="btn" onclick="updateDeforestation()">🤖 AI Analysis</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="deforest-lost">1,247</div>
+                    <div class="stat-label">Hectares Lost (AI Detected)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="deforest-increase">8.7%</div>
+                    <div class="stat-label">AI-Predicted Increase</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="deforest-zones">23</div>
+                    <div class="stat-label">AI-Identified Risk Zones</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="deforest-alerts">67</div>
+                    <div class="stat-label">Autonomous Alerts</div>
+                </div>
+            </div>
+
+            <div class="alert" id="deforest-alert">
+                <div class="alert-timestamp">14:23:07</div>
+                <strong>🤖 AI Alert - Critical Deforestation:</strong> SPOT Satellite Agent detected significant indigenous forest loss in Knysna area. Risk Assessment Agent recommends immediate investigation. Disaster Management Agent has been notified.
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>🛰️ AI Satellite Analysis - SA Forests</h3>
+                    <div id="deforestation-map" class="map-container"></div>
+                    <p>Real-time indigenous forest cover analysis using autonomous AI agents processing SPOT and Sentinel imagery with deep learning change detection algorithms tailored for SA vegetation types.</p>
+                </div>
+                <div class="card">
+                    <h3>📈 Agent-Generated Forest Loss Trends</h3>
+                    <div class="chart-container">
+                        <canvas id="deforestation-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Veld Fire Module -->
+        <div id="wildfire" class="module">
+            <div class="controls">
+                <h3 style="color: #10b981; margin-bottom: 1rem;">AI Veld Fire Risk Prediction - South Africa</h3>
+                <div class="control-group">
+                    <label>Region:</label>
+                    <select id="wildfire-region">
+                        <option>Western Cape Fynbos</option>
+                        <option>Mpumalanga Grasslands</option>
+                        <option>Free State Plains</option>
+                        <option>Eastern Cape Karoo</option>
+                        <option>KwaZulu-Natal Highlands</option>
+                    </select>
+                    <label>Prediction Days:</label>
+                    <input type="range" min="1" max="30" value="7" id="prediction-days">
+                    <span id="days-value">7 days</span>
+                    <button class="btn" onclick="updateWildfire()">🤖 AI Predict</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="fire-index">82%</div>
+                    <div class="stat-label">AI Veld Fire Weather Index</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fire-hotspots">17</div>
+                    <div class="stat-label">AI-Detected Hotspots</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fire-risk">High</div>
+                    <div class="stat-label">AI Risk Level (7 Days)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fire-area">89k</div>
+                    <div class="stat-label">Hectares at AI-Predicted Risk</div>
+                </div>
+            </div>
+
+            <div class="alert warning" id="wildfire-alert">
+                <div class="alert-timestamp">14:23:15</div>
+                <strong>🤖 AI Warning - Extreme Veld Fire Risk:</strong> SAWS Weather Agent reports extreme berg wind conditions in Western Cape. Risk Assessment Agent upgraded threat level to red. Disaster Management Agent has pre-positioned helicopters.
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>🔥 AI Veld Fire Risk Heat Map</h3>
+                    <div id="wildfire-map" class="map-container"></div>
+                    <p>AI agents combining SAWS weather data, fuel moisture content, topography, and historical veld fire patterns to autonomously predict and map high-risk fire zones across South African biomes.</p>
+                </div>
+                <div class="card">
+                    <h3>🎯 AI Risk Factor Analysis</h3>
+                    <div class="chart-container">
+                        <canvas id="wildfire-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Urban Heat Island Module -->
+        <div id="heat-island" class="module">
+            <div class="controls">
+                <h3 style="color: #10b981; margin-bottom: 1rem;">AI Urban Heat Island Analysis - SA Cities</h3>
+                <div class="control-group">
+                    <label>City:</label>
+                    <select id="heat-city">
+                        <option>Johannesburg</option>
+                        <option>Cape Town</option>
+                        <option>Durban</option>
+                        <option>Pretoria</option>
+                        <option>Port Elizabeth</option>
+                        <option>Bloemfontein</option>
+                    </select>
+                    <label>Season:</label>
+                    <select id="heat-season">
+                        <option>Summer</option>
+                        <option>Winter</option>
+                        <option>Spring</option>
+                        <option>Autumn</option>
+                    </select>
+                    <button class="btn" onclick="updateHeatIsland()">🤖 AI Analyze</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="heat-diff">6.8°C</div>
+                    <div class="stat-label">AI-Detected Max Temp Diff</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="heat-hottest">38.2°C</div>
+                    <div class="stat-label">AI-Identified Hottest Zone</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="heat-green">22%</div>
+                    <div class="stat-label">AI-Mapped Green Coverage</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="heat-sensors">147</div>
+                    <div class="stat-label">Active AI Temperature Sensors</div>
+                </div>
+            </div>
+
+            <div class="alert info" id="heat-alert">
+                <div class="alert-timestamp">14:22:50</div>
+                <strong>🤖 AI Insight - Heat Island Detected:</strong> Pattern Recognition Agent identified 6.2°C temperature difference in Johannesburg CBD. Ground Sensor Agent recommends increasing urban tree canopy monitoring in Sandton area.
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>🌡️ AI Thermal Analysis - SA Cities</h3>
+                    <div id="heat-map" class="map-container"></div>
+                    <p>AI agents processing MODIS and Landsat thermal data with machine learning classification to autonomously identify and track urban heat islands in major South African metropolitan areas.</p>
+                </div>
+                <div class="card">
+                    <h3>📊 AI Temperature Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="heat-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Crop Health Module -->
+        <div id="crops" class="module">
+            <div class="controls">
+                <h3 style="color: #10b981; margin-bottom: 1rem;">AI Crop Health Monitoring - SA Agricultural Regions</h3>
+                <div class="control-group">
+                    <label>Region:</label>
+                    <select id="crop-region">
+                        <option>Free State Maize Belt</option>
+                        <option>Western Cape Wine Regions</option>
+                        <option>Mpumalanga Sugar Belt</option>
+                        <option>Northern Cape Wheat Areas</option>
+                        <option>KwaZulu-Natal Coastal Farms</option>
+                    </select>
+                    <label>Crop Type:</label>
+                    <select id="crop-type">
+                        <option>Maize</option>
+                        <option>Wheat</option>
+                        <option>Sugarcane</option>
+                        <option>Grapes</option>
+                        <option>Soybeans</option>
+                        <option>Sunflower</option>
+                    </select>
+                    <button class="btn" onclick="updateCrops()">🤖 AI Monitor</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="crop-ndvi">0.68</div>
+                    <div class="stat-label">AI-Calculated Avg NDVI</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="crop-healthy">76%</div>
+                    <div class="stat-label">AI-Detected Healthy Coverage</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="crop-fields">284</div>
+                    <div class="stat-label">AI-Monitored Fields</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="crop-yield">4.8 t/ha</div>
+                    <div class="stat-label">AI-Predicted Yield</div>
+                </div>
+            </div>
+
+            <div class="alert warning" id="crop-alert">
+                <div class="alert-timestamp">14:21:55</div>
+                <strong>🤖 AI Alert - Crop Stress Detected:</strong> DEA Ground Sensor Agent detected drought stress indicators in Free State maize fields. Risk Assessment Agent suggests irrigation intervention needed. Resource Allocation Agent coordinating with local agricultural extension services.
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>🌾 AI Multispectral Analysis - SA Farms</h3>
+                    <div id="crop-map" class="map-container"></div>
+                    <p>AI agents processing NDVI and multispectral imagery for autonomous crop health assessment and yield prediction across South African commercial farming areas using deep learning models trained on local conditions.</p>
+                </div>
+                <div class="card">
+                    <h3>📈 AI Vegetation Index Trends</h3>
+                    <div class="chart-container">
+                        <canvas id="crop-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coastal Erosion Module -->
+        <div id="coastal" class="module">
+            <div class="controls">
+                <h3 style="color: #10b981; margin-bottom: 1rem;">AI Coastal Erosion Detection - SA Coastline</h3>
+                <div class="control-group">
+                    <label>Coastline:</label>
+                    <select id="coastal-region">
+                        <option>KwaZulu-Natal South Coast</option>
+                        <option>Garden Route</option>
+                        <option>West Coast Peninsula</option>
+                        <option>Eastern Cape Wild Coast</option>
+                        <option>False Bay</option>
+                    </select>
+                    <label>Analysis Period:</label>
+                    <select id="coastal-period">
+                        <option>Last 5 years</option>
+                        <option>Last 10 years</option>
+                        <option>Last 20 years</option>
+                    </select>
+                    <button class="btn" onclick="updateCoastal()">🤖 AI Analyze</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="coastal-change">-1.8m</div>
+                    <div class="stat-label">AI-Detected Shoreline Change</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="coastal-monitored">89.3km</div>
+                    <div class="stat-label">AI-Monitored Coastline</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="coastal-risk">Medium</div>
+                    <div class="stat-label">AI-Assessed Erosion Risk</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="coastal-zones">34</div>
+                    <div class="stat-label">AI-Identified Critical Zones</div>
+                </div>
+            </div>
+
+            <div class="alert" id="coastal-alert">
+                <div class="alert-timestamp">14:23:01</div>
+                <strong>🤖 AI Alert - Critical Erosion:</strong> Historical Trend Agent detected accelerated retreat at Ballito beachfront. Pattern Recognition Agent identified 1.2m/year erosion rate. Disaster Management Agent coordinating with KZN coastal management.
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>🌊 AI Shoreline Change Detection - SA Coast</h3>
+                    <div id="coastal-map" class="map-container"></div>
+                    <p>AI agents performing time-series analysis of satellite and drone imagery to autonomously track shoreline changes along South Africa's 3,000km coastline and predict future coastal erosion patterns.</p>
+                </div>
+                <div class="card">
+                    <h3>📉 AI Erosion Rate Analysis</h3>
+                    <div class="chart-container">
+                        <canvas id="coastal-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Panel -->
+    <div class="notification-panel" id="notification-panel"></div>
+
+    <script>
+        // Global variables
+        let maps = {};
+        let charts = {};
+        let agents = {
+            satellite: { active: true, status: 'active' },
+            weather: { active: true, status: 'active' },
+            sensors: { active: true, status: 'processing' },
+            risk: { active: true, status: 'active' },
+            allocation: { active: true, status: 'active' },
+            alerts: { active: true, status: 'active' },
+            emergency: { active: true, status: 'processing' },
+            communication: { active: true, status: 'active' },
+            pattern: { active: true, status: 'active' },
+            threshold: { active: true, status: 'active' },
+            trends: { active: true, status: 'active' }
+        };
+        let agentUpdateIntervals = {};
+        let notificationQueue = [];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMaps();
+            initializeCharts();
+            setupEventListeners();
+            startAgentSimulation();
+            initializeNotificationSystem();
+        });
+
+        // Agent Control Functions
+        function toggleAgent(agentName, buttonElement) {
+            agents[agentName].active = !agents[agentName].active;
+            buttonElement.classList.toggle('active');
+            
+            if (agents[agentName].active) {
+                agents[agentName].status = 'active';
+                showNotification(`${agentName.charAt(0).toUpperCase() + agentName.slice(1)} Agent activated`, 'success');
+                startAgentUpdates(agentName);
+            } else {
+                agents[agentName].status = 'idle';
+                showNotification(`${agentName.charAt(0).toUpperCase() + agentName.slice(1)} Agent deactivated`, 'warning');
+                stopAgentUpdates(agentName);
+            }
+            
+            updateAgentStatusBar();
+        }
+
+        function startAllAgents() {
+            Object.keys(agents).forEach(agentName => {
+                agents[agentName].active = true;
+                agents[agentName].status = 'active';
+                const toggleButton = document.querySelector(`[onclick*="${agentName}"]`);
+                if (toggleButton) {
+                    toggleButton.classList.add('active');
+                }
+                startAgentUpdates(agentName);
+            });
+            updateAgentStatusBar();
+            showNotification('All AI agents activated successfully', 'success');
+        }
+
+        function pauseAllAgents() {
+            Object.keys(agents).forEach(agentName => {
+                agents[agentName].status = 'idle';
+                stopAgentUpdates(agentName);
+            });
+            updateAgentStatusBar();
+            showNotification('All AI agents paused', 'warning');
+        }
+
+        function emergencyStop() {
+            Object.keys(agents).forEach(agentName => {
+                agents[agentName].active = false;
+                agents[agentName].status = 'idle';
+                const toggleButton = document.querySelector(`[onclick*="${agentName}"]`);
+                if (toggleButton) {
+                    toggleButton.classList.remove('active');
+                }
+                stopAgentUpdates(agentName);
+            });
+            updateAgentStatusBar();
+            showNotification('EMERGENCY STOP: All AI agents deactivated', 'error');
+        }
+
+        function startAgentUpdates(agentName) {
+            if (agentUpdateIntervals[agentName]) {
+                clearInterval(agentUpdateIntervals[agentName]);
+            }
+            
+            agentUpdateIntervals[agentName] = setInterval(() => {
+                updateAgentMetrics(agentName);
+                updateAgentLog(agentName);
+            }, 5000 + Math.random() * 10000);
+        }
+
+        function stopAgentUpdates(agentName) {
+            if (agentUpdateIntervals[agentName]) {
+                clearInterval(agentUpdateIntervals[agentName]);
+                delete agentUpdateIntervals[agentName];
+            }
+        }
+
+        function updateAgentStatusBar() {
+            const statusElements = document.querySelectorAll('.agent-status');
+            const agentNames = ['satellite', 'weather', 'sensors', 'risk', 'allocation', 'emergency', 'communication'];
+            
+            statusElements.forEach((element, index) => {
+                if (agentNames[index] && agents[agentNames[index]]) {
+                    element.className = `agent-status ${agents[agentNames[index]].status}`;
+                }
+            });
+        }
+
+        function updateAgentMetrics(agentName) {
+            if (!agents[agentName].active) return;
+
+            const metricElements = {
+                satellite: ['satellite-collections', 'satellite-accuracy'],
+                weather: ['weather-stations', 'weather-updates'],
+                sensors: ['sensor-count', 'sensor-uptime'],
+                risk: ['risk-assessments', 'risk-accuracy'],
+                allocation: ['allocation-decisions', 'allocation-efficiency'],
+                alerts: ['alert-processed', 'alert-response'],
+                emergency: ['emergency-responses', 'emergency-time'],
+                communication: ['comm-messages', 'comm-stakeholders'],
+                pattern: ['pattern-models', 'pattern-accuracy'],
+                trends: ['trend-analyses', 'trend-span']
+            };
+
+            if (metricElements[agentName]) {
+                metricElements[agentName].forEach(elementId => {
+                    const element = document.getElementById(elementId);
+                    if (element) {
+                        const currentValue = parseFloat(element.textContent) || 0;
+                        const change = (Math.random() - 0.5) * 0.1;
+                        let newValue = currentValue + change;
+                        
+                        if (elementId.includes('accuracy') || elementId.includes('efficiency') || elementId.includes('uptime')) {
+                            newValue = Math.max(85, Math.min(99.9, newValue));
+                            element.textContent = newValue.toFixed(1) + '%';
+                        } else if (elementId.includes('time')) {
+                            newValue = Math.max(1, newValue);
+                            element.textContent = newValue.toFixed(1) + (elementId.includes('emergency-time') ? 'm' : 's');
+                        } else {
+                            newValue = Math.max(0, Math.floor(newValue));
+                            element.textContent = newValue.toLocaleString();
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateAgentLog(agentName) {
+            if (!agents[agentName].active) return;
+
+            const logMessages = {
+                satellite: [
+                    { msg: 'SPOT-7 data acquired for Kruger National Park', type: 'success' },
+                    { msg: 'Processing Sentinel-2 imagery for Limpopo deforestation', type: 'info' },
+                    { msg: 'Change detection completed for Eastern Cape forests', type: 'success' },
+                    { msg: 'Cloud coverage affecting Western Cape imagery', type: 'warning' }
+                ],
+                weather: [
+                    { msg: 'Berg wind conditions detected - Fire risk elevated', type: 'warning' },
+                    { msg: 'Heat wave detected in Johannesburg - Analysis triggered', type: 'info' },
+                    { msg: 'Drought forecast updated for Northern Cape', type: 'success' },
+                    { msg: 'Cold front approaching Western Cape', type: 'info' }
+                ],
+                sensors: [
+                    { msg: 'Air quality sensors calibrated in Gauteng', type: 'success' },
+                    { msg: 'Soil moisture sensors updated in Free State', type: 'success' },
+                    { msg: 'PM2.5 spike detected in Vaal Triangle', type: 'warning' },
+                    { msg: 'Coastal sensor network restored in KZN', type: 'success' }
+                ],
+                risk: [
+                    { msg: 'High veld fire risk identified in Mpumalanga', type: 'warning' },
+                    { msg: 'Drought risk model updated with new data', type: 'success' },
+                    { msg: 'Coastal erosion probability calculated', type: 'info' },
+                    { msg: 'Agricultural threat assessment completed', type: 'warning' }
+                ],
+                allocation: [
+                    { msg: 'Fire helicopters deployed to high-risk areas', type: 'success' },
+                    { msg: 'Water tankers allocated to drought areas', type: 'info' },
+                    { msg: 'Emergency crews positioned optimally', type: 'success' },
+                    { msg: 'Additional resources requested for monitoring', type: 'warning' }
+                ],
+                alerts: [
+                    { msg: 'CRITICAL: Veld fire alert elevated for Knysna', type: 'error' },
+                    { msg: 'Drought alerts queued for Northern Cape', type: 'warning' },
+                    { msg: 'Air quality alert system updated', type: 'success' },
+                    { msg: 'Coastal erosion alerts prioritized', type: 'success' }
+                ],
+                emergency: [
+                    { msg: 'Emergency protocol activated for veld fire', type: 'error' },
+                    { msg: 'Evacuation routes calculated for coastal areas', type: 'success' },
+                    { msg: 'Pre-positioning resources near farms', type: 'warning' },
+                    { msg: 'Response teams coordinated with municipalities', type: 'info' }
+                ],
+                communication: [
+                    { msg: 'SMS alerts sent to fire-prone communities', type: 'success' },
+                    { msg: 'Provincial environmental reports delivered', type: 'info' },
+                    { msg: 'Farmer networks notified of conditions', type: 'success' },
+                    { msg: 'Municipal authorities briefed on risks', type: 'success' }
+                ],
+                pattern: [
+                    { msg: 'New drought pattern identified in Karoo data', type: 'success' },
+                    { msg: 'Seasonal fire model updated with WC data', type: 'info' },
+                    { msg: 'Unusual heat pattern detected in JHB CBD', type: 'warning' },
+                    { msg: 'Agricultural cycle model retrained', type: 'success' }
+                ],
+                trends: [
+                    { msg: 'Long-term rainfall trends updated', type: 'success' },
+                    { msg: 'Climate impact analysis completed', type: 'info' },
+                    { msg: 'Coastal erosion trend accelerating', type: 'warning' },
+                    { msg: 'Temperature trend analysis updated', type: 'success' }
+                ]
+            };
+
+            const logElement = document.getElementById(`${agentName}-log`);
+            if (logElement && logMessages[agentName]) {
+                const randomMessage = logMessages[agentName][Math.floor(Math.random() * logMessages[agentName].length)];
+                const timestamp = new Date().toLocaleTimeString();
+                const newEntry = document.createElement('div');
+                newEntry.className = `log-entry ${randomMessage.type}`;
+                newEntry.textContent = `[${timestamp}] ${randomMessage.msg}`;
+                
+                logElement.insertBefore(newEntry, logElement.firstChild);
+                
+                while (logElement.children.length > 5) {
+                    logElement.removeChild(logElement.lastChild);
+                }
+            }
+        }
+
+        function startAgentSimulation() {
+            Object.keys(agents).forEach(agentName => {
+                if (agents[agentName].active) {
+                    startAgentUpdates(agentName);
+                }
+            });
+
+            setInterval(() => {
+                simulateEnvironmentalEvent();
+            }, 15000);
+
+            setInterval(updateAgentStatusBar, 2000);
+        }
+
+        function simulateEnvironmentalEvent() {
+            const events = [
+                {
+                    type: 'deforestation',
+                    message: 'Indigenous forest loss detected in Knysna area',
+                    severity: 'warning',
+                    agent: 'SPOT Satellite Agent'
+                },
+                {
+                    type: 'wildfire',
+                    message: 'Veld fire risk elevated due to berg wind conditions',
+                    severity: 'error',
+                    agent: 'SAWS Weather Agent'
+                },
+                {
+                    type: 'heat',
+                    message: 'Urban heat island intensity increased in Johannesburg CBD',
+                    severity: 'info',
+                    agent: 'Pattern Recognition Agent'
+                },
+                {
+                    type: 'coastal',
+                    message: 'Accelerated erosion detected along Garden Route',
+                    severity: 'warning',
+                    agent: 'Historical Trend Agent'
+                },
+                {
+                    type: 'crops',
+                    message: 'Drought stress indicators found in Free State maize belt',
+                    severity: 'warning',
+                    agent: 'DEA Ground Sensor Agent'
+                }
+            ];
+
+            const event = events[Math.floor(Math.random() * events.length)];
+            showNotification(`🤖 ${event.agent}: ${event.message}`, event.severity);
+            updateModuleAlert(event);
+        }
+
+        function updateModuleAlert(event) {
+            const alertElement = document.getElementById(`${event.type === 'wildfire' ? 'wildfire' : event.type === 'heat' ? 'heat' : event.type}-alert`);
+            if (alertElement) {
+                const timestamp = new Date().toLocaleTimeString();
+                alertElement.innerHTML = `
+                    <div class="alert-timestamp">${timestamp}</div>
+                    <strong>🤖 AI ${event.severity === 'error' ? 'Alert' : event.severity === 'warning' ? 'Warning' : 'Insight'}:</strong> ${event.message}
+                `;
+                alertElement.className = `alert ${event.severity}`;
+            }
+        }
+
+        // Notification System
+        function initializeNotificationSystem() {
+            setInterval(() => {
+                const notifications = document.querySelectorAll('.notification');
+                notifications.forEach(notification => {
+                    if (Date.now() - parseInt(notification.dataset.timestamp) > 10000) {
+                        notification.style.animation = 'slideInRight 0.3s ease-in reverse';
+                        setTimeout(() => {
+                            if (notification.parentNode) {
+                                notification.parentNode.removeChild(notification);
+                            }
+                        }, 300);
+                    }
+                });
+            }, 5000);
+        }
+
+        function showNotification(message, type = 'info') {
+            const notificationPanel = document.getElementById('notification-panel');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.dataset.timestamp = Date.now();
+            
+            const timestamp = new Date().toLocaleTimeString();
+            notification.innerHTML = `
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
+                <div style="font-size: 0.9rem; margin-bottom: 0.5rem;">${message}</div>
+                <div style="font-size: 0.7rem; color: #94a3b8;">${timestamp}</div>
+            `;
+            
+            notificationPanel.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideInRight 0.3s ease-in reverse';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                }
+            }, 8000);
+        }
+
+        // Module switching
+        function showModule(moduleId) {
+            document.querySelectorAll('.module').forEach(module => {
+                module.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(moduleId).classList.add('active');
+            event.target.classList.add('active');
+
+            setTimeout(() => {
+                if (maps[moduleId]) {
+                    maps[moduleId].invalidateSize();
+                }
+            }, 100);
+        }
+
+        // Initialize maps with South African locations
+        function initializeMaps() {
+            // Deforestation map - Centered on South African forests
+            maps.deforestation = L.map('deforestation-map').setView([-33.9, 23.4], 6);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(maps.deforestation);
+            addDeforestationData();
+
+            // Veld fire map - Centered on South Africa
+            maps.wildfire = L.map('wildfire-map').setView([-30.5595, 22.9375], 5);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(maps.wildfire);
+            addWildfireData();
+
+            // Heat island map - Centered on Johannesburg
+            maps['heat-island'] = L.map('heat-map').setView([-26.2041, 28.0473], 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(maps['heat-island']);
+            addHeatIslandData();
+
+            // Crop health map - Centered on Free State
+            maps.crops = L.map('crop-map').setView([-28.5, 26.5], 6);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(maps.crops);
+            addCropData();
+
+            // Coastal erosion map - Centered on SA coast
+            maps.coastal = L.map('coastal-map').setView([-34.0, 22.0], 6);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(maps.coastal);
+            addCoastalData();
+        }
+
+        // Add South African environmental data to maps
+        function addDeforestationData() {
+            const saForestAreas = [
+                {lat: -33.93, lng: 23.05, severity: 'high', agent: 'SPOT Satellite Agent', name: 'Knysna Forest'},
+                {lat: -25.4, lng: 30.2, severity: 'medium', agent: 'Pattern Recognition', name: 'Mpumalanga Escarpment'},
+                {lat: -29.8, lng: 30.1, severity: 'low', agent: 'Historical Trend', name: 'KZN Coastal Forest'},
+                {lat: -23.9, lng: 29.8, severity: 'high', agent: 'Risk Assessment', name: 'Limpopo Woodlands'}
+            ];
+
+            saForestAreas.forEach(area => {
+                const color = area.severity === 'high' ? '#ef4444' : 
+                             area.severity === 'medium' ? '#f59e0b' : '#10b981';
+                
+                L.circle([area.lat, area.lng], {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.5,
+                    radius: 25000
+                }).addTo(maps.deforestation)
+                .bindPopup(`🤖 AI-Detected Deforestation<br><strong>${area.name}</strong><br>Severity: ${area.severity}<br>Detected by: ${area.agent}`);
+            });
+        }
+
+        function addWildfireData() {
+            const saFireRiskAreas = [
+                {lat: -33.9, lng: 18.4, risk: 'extreme', agent: 'SAWS Weather Agent', name: 'Western Cape Fynbos'},
+                {lat: -25.7, lng: 28.2, risk: 'high', agent: 'Risk Assessment', name: 'Mpumalanga Grasslands'},
+                {lat: -28.8, lng: 26.2, risk: 'moderate', agent: 'Pattern Recognition', name: 'Free State Plains'},
+                {lat: -32.0, lng: 26.0, risk: 'high', agent: 'SPOT Satellite Agent', name: 'Eastern Cape Karoo'}
+            ];
+
+            saFireRiskAreas.forEach(area => {
+                const color = area.risk === 'extreme' ? '#7f1d1d' : 
+                             area.risk === 'high' ? '#dc2626' : '#f59e0b';
+                
+                L.circle([area.lat, area.lng], {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.6,
+                    radius: 50000
+                }).addTo(maps.wildfire)
+                .bindPopup(`🤖 AI Veld Fire Risk Assessment<br><strong>${area.name}</strong><br>Risk Level: ${area.risk}<br>Analyzed by: ${area.agent}`);
+            });
+        }
+
+        function addHeatIslandData() {
+            const saHeatZones = [
+                {lat: -26.1951, lng: 28.0568, temp: 33.8, zone: 'Johannesburg CBD', agent: 'Ground Sensors'},
+                {lat: -26.1076, lng: 28.0567, temp: 29.2, zone: 'Johannesburg North', agent: 'SPOT Satellite Agent'},
+                {lat: -26.2309, lng: 28.0583, temp: 35.1, zone: 'Johannesburg South', agent: 'Pattern Recognition'},
+                {lat: -26.1367, lng: 28.2411, temp: 27.9, zone: 'OR Tambo Area', agent: 'Thermal Analysis'}
+            ];
+
+            saHeatZones.forEach(zone => {
+                const intensity = zone.temp > 32 ? 0.8 : zone.temp > 30 ? 0.6 : 0.4;
+                
+                L.circle([zone.lat, zone.lng], {
+                    color: '#dc2626',
+                    fillColor: '#ef4444',
+                    fillOpacity: intensity,
+                    radius: 3000
+                }).addTo(maps['heat-island'])
+                .bindPopup(`🤖 ${zone.zone}<br>Temperature: ${zone.temp}°C<br>Monitored by: ${zone.agent}`);
+            });
+        }
+
+        function addCropData() {
+            const saCropFields = [
+                {lat: -28.3, lng: 26.8, health: 0.68, crop: 'Maize', agent: 'SPOT Satellite Agent', region: 'Free State'},
+                {lat: -26.0, lng: 28.5, health: 0.82, crop: 'Sunflower', agent: 'DEA Ground Sensors', region: 'Gauteng'},
+                {lat: -29.1, lng: 30.2, health: 0.71, crop: 'Sugarcane', agent: 'Pattern Recognition', region: 'KwaZulu-Natal'},
+                {lat: -33.8, lng: 19.0, health: 0.89, crop: 'Grapes', agent: 'Risk Assessment', region: 'Western Cape'}
+            ];
+
+            saCropFields.forEach(field => {
+                const color = field.health > 0.8 ? '#10b981' : 
+                             field.health > 0.7 ? '#f59e0b' : '#ef4444';
+                
+                L.circle([field.lat, field.lng], {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.6,
+                    radius: 15000
+                }).addTo(maps.crops)
+                .bindPopup(`🤖 ${field.crop} Field - ${field.region}<br>AI Health Score: ${field.health}<br>NDVI: ${field.health.toFixed(2)}<br>Analyzed by: ${field.agent}`);
+            });
+        }
+
+        function addCoastalData() {
+            const saCoastalPoints = [
+                {lat: -29.85, lng: 31.03, erosion: -1.2, agent: 'Historical Trend Agent', name: 'Ballito Beach'},
+                {lat: -34.1, lng: 18.3, erosion: -0.8, agent: 'SPOT Satellite Agent', name: 'Camps Bay'},
+                {lat: -33.97, lng: 25.6, erosion: -2.1, agent: 'Pattern Recognition', name: 'Plettenberg Bay'},
+                {lat: -33.0, lng: 27.9, erosion: -1.5, agent: 'DEA Ground Sensors', name: 'East London Coast'}
+            ];
+
+            saCoastalPoints.forEach(point => {
+                const color = Math.abs(point.erosion) > 1.8 ? '#dc2626' : 
+                             Math.abs(point.erosion) > 1.0 ? '#f59e0b' : '#10b981';
+                
+                L.circle([point.lat, point.lng], {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.7,
+                    radius: 2000
+                }).addTo(maps.coastal)
+                .bindPopup(`🤖 AI Monitoring Point<br><strong>${point.name}</strong><br>Erosion Rate: ${point.erosion}m/year<br>Monitored by: ${point.agent}`);
+            });
+        }
+
+        // Initialize charts with South African data
+        function initializeCharts() {
+            // Deforestation chart
+            const deforestCtx = document.getElementById('deforestation-chart').getContext('2d');
+            charts.deforestation = new Chart(deforestCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2020', '2021', '2022', '2023', '2024'],
+                    datasets: [{
+                        label: 'AI-Detected Forest Loss (Hectares)',
+                        data: [850, 1120, 1450, 1680, 1950],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'AI-Predicted Trend',
+                        data: [800, 1100, 1500, 1750, 2100],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        fill: false,
+                        tension: 0.4,
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: getChartOptions('SA Indigenous Forest Loss Monitoring by AI Agents')
+            });
+
+            // Veld fire chart
+            const wildfireCtx = document.getElementById('wildfire-chart').getContext('2d');
+            charts.wildfire = new Chart(wildfireCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Temperature', 'Wind Speed', 'Humidity', 'Fuel Moisture', 'Topography', 'Historical Risk'],
+                    datasets: [{
+                        label: 'Current AI Risk Assessment',
+                        data: [82, 88, 12, 22, 75, 71],
+                        borderColor: '#dc2626',
+                        backgroundColor: 'rgba(220, 38, 38, 0.2)',
+                        pointBackgroundColor: '#dc2626'
+                    }, {
+                        label: 'AI Predicted (24h)',
+                        data: [75, 82, 18, 28, 75, 68],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        pointBackgroundColor: '#f59e0b'
+                    }]
+                },
+                options: getRadarChartOptions('AI Veld Fire Risk Factors - SA')
+            });
+
+            // Heat island chart for Johannesburg
+            const heatCtx = document.getElementById('heat-chart').getContext('2d');
+            charts.heat = new Chart(heatCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['CBD', 'Sandton', 'Soweto', 'Randburg', 'Roodepoort', 'Kempton Park'],
+                    datasets: [{
+                        label: 'AI-Measured Temperature (°C)',
+                        data: [33.8, 31.2, 32.5, 28.9, 30.1, 29.7],
+                        backgroundColor: [
+                            '#dc2626', '#f59e0b', '#ef4444', '#10b981', '#3b82f6', '#8b5cf6'
+                        ],
+                        borderWidth: 0
+                    }, {
+                        label: 'AI-Predicted Peak (°C)',
+                        data: [35.9, 33.1, 34.2, 30.8, 31.9, 31.2],
+                        backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                        borderWidth: 0
+                    }]
+                },
+                options: getChartOptions('AI Urban Heat Island Analysis - Johannesburg')
+            });
+
+            // SA Crop health chart
+            const cropCtx = document.getElementById('crop-chart').getContext('2d');
+            charts.crop = new Chart(cropCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'AI-Calculated NDVI Index',
+                        data: [0.3, 0.35, 0.5, 0.7, 0.68, 0.4, 0.25, 0.3, 0.45, 0.6, 0.75, 0.65],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'AI-Monitored Soil Moisture %',
+                        data: [65, 58, 52, 45, 35, 28, 22, 25, 35, 48, 62, 68],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: false,
+                        tension: 0.4
+                    }, {
+                        label: 'AI-Predicted Yield Score',
+                        data: [0.4, 0.5, 0.6, 0.75, 0.7, 0.45, 0.3, 0.35, 0.5, 0.65, 0.8, 0.7],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        fill: false,
+                        tension: 0.4,
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: getChartOptions('AI Crop Health Monitoring - SA Agricultural Regions')
+            });
+
+            // SA Coastal erosion chart
+            const coastalCtx = document.getElementById('coastal-chart').getContext('2d');
+            charts.coastal = new Chart(coastalCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2019', '2020', '2021', '2022', '2023', '2024'],
+                    datasets: [{
+                        label: 'AI-Detected Shoreline Position (m)',
+                        data: [0, -0.6, -1.2, -1.9, -2.8, -3.6],
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'AI-Measured Sea Level (mm)',
+                        data: [0, 2.1, 4.5, 6.2, 8.8, 11.3],
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }, {
+                        label: 'AI-Predicted Erosion Rate',
+                        data: [0, -0.7, -1.4, -2.3, -3.2, -4.2],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: false,
+                        tension: 0.4,
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: getCoastalChartOptions('AI Coastal Erosion Analysis - SA Coastline')
+            });
+        }
+
+        function getChartOptions(title) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: title,
+                        color: '#10b981',
+                        font: { size: 14, weight: 'bold' }
+                    },
+                    legend: { labels: { color: '#e2e8f0' } }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: '#374151' }
+                    },
+                    y: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: '#374151' }
+                    }
+                }
+            };
+        }
+
+        function getRadarChartOptions(title) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: title,
+                        color: '#10b981',
+                        font: { size: 14, weight: 'bold' }
+                    },
+                    legend: { labels: { color: '#e2e8f0' } }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: '#374151' },
+                        pointLabels: { color: '#94a3b8' }
+                    }
+                }
+            };
+        }
+
+        function getCoastalChartOptions(title) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: title,
+                        color: '#10b981',
+                        font: { size: 14, weight: 'bold' }
+                    },
+                    legend: { labels: { color: '#e2e8f0' } }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: '#374151' }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: '#374151' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        ticks: { color: '#94a3b8' },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            };
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            const slider = document.getElementById('prediction-days');
+            const daysValue = document.getElementById('days-value');
+            
+            if (slider && daysValue) {
+                slider.addEventListener('input', function() {
+                    daysValue.textContent = this.value + ' days';
+                });
+            }
+        }
+
+        // Update functions for each module with South African context
+        function updateDeforestation() {
+            const region = document.getElementById('deforest-region').value;
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            
+            showNotification('🤖 SPOT Satellite Agent: Analyzing SA forest patterns...', 'info');
+            
+            setTimeout(() => {
+                const newData = generateRandomData(5, 800, 2500);
+                const predictedData = newData.map(val => val * 1.15 + Math.random() * 300);
+                
+                charts.deforestation.data.datasets[0].data = newData;
+                charts.deforestation.data.datasets[1].data = predictedData;
+                charts.deforestation.update();
+                
+                updateStats('deforestation', {
+                    lost: Math.floor(Math.random() * 2000) + 500,
+                    increase: (Math.random() * 20).toFixed(1),
+                    zones: Math.floor(Math.random() * 30) + 15,
+                    alerts: Math.floor(Math.random() * 100) + 30
+                });
+                
+                showNotification(`🤖 Pattern Recognition Agent: Forest analysis complete for ${region}`, 'success');
+            }, 2000);
+        }
+
+        function updateWildfire() {
+            const region = document.getElementById('wildfire-region').value;
+            const days = document.getElementById('prediction-days').value;
+            
+            showNotification('🤖 SAWS Weather Agent: Calculating veld fire risk factors...', 'info');
+            
+            setTimeout(() => {
+                const currentFactors = [
+                    Math.floor(Math.random() * 40) + 60,
+                    Math.floor(Math.random() * 40) + 60,
+                    Math.floor(Math.random() * 30) + 10,
+                    Math.floor(Math.random() * 40) + 20,
+                    Math.floor(Math.random() * 30) + 60,
+                    Math.floor(Math.random() * 30) + 50
+                ];
+                
+                const predictedFactors = currentFactors.map(val => val + (Math.random() - 0.5) * 20);
+                
+                charts.wildfire.data.datasets[0].data = currentFactors;
+                charts.wildfire.data.datasets[1].data = predictedFactors;
+                charts.wildfire.update();
+                
+                showNotification(`🤖 Risk Assessment Agent: Veld fire risk updated for ${region} - ${days} day forecast`, 'success');
+            }, 1500);
+        }
+
+        function updateHeatIsland() {
+            const city = document.getElementById('heat-city').value;
+            const season = document.getElementById('heat-season').value;
+            
+            showNotification('🤖 DEA Ground Sensor Agent: Processing thermal data...', 'info');
+            
+            setTimeout(() => {
+                const baseTemps = [33.8, 31.2, 32.5, 28.9, 30.1, 29.7];
+                const seasonMultiplier = season === 'Summer' ? 1.3 : 
+                                       season === 'Winter' ? 0.6 : 
+                                       season === 'Spring' ? 0.9 : 1.0;
+                
+                const currentTemps = baseTemps.map(temp => (temp * seasonMultiplier).toFixed(1));
+                const predictedTemps = currentTemps.map(temp => (parseFloat(temp) + Math.random() * 4).toFixed(1));
+                
+                charts.heat.data.datasets[0].data = currentTemps;
+                charts.heat.data.datasets[1].data = predictedTemps;
+                charts.heat.update();
+                
+                showNotification(`🤖 Pattern Recognition Agent: Heat island analysis updated for ${city} - ${season}`, 'success');
+            }, 1800);
+        }
+
+        function updateCrops() {
+            const region = document.getElementById('crop-region').value;
+            const cropType = document.getElementById('crop-type').value;
+            
+            showNotification('🤖 SPOT Satellite Agent: Processing multispectral imagery...', 'info');
+            
+            setTimeout(() => {
+                const newNDVI = generateRandomData(12, 0.2, 0.8);
+                const newMoisture = generateRandomData(12, 20, 70);
+                const newYield = newNDVI.map(val => val * 0.9 + Math.random() * 0.2);
+                
+                charts.crop.data.datasets[0].data = newNDVI;
+                charts.crop.data.datasets[1].data = newMoisture;
+                charts.crop.data.datasets[2].data = newYield;
+                charts.crop.update();
+                
+                showNotification(`🤖 Risk Assessment Agent: Crop monitoring updated for ${cropType} in ${region}`, 'success');
+            }, 2200);
+        }
+
+        function updateCoastal() {
+            const region = document.getElementById('coastal-region').value;
+            const period = document.getElementById('coastal-period').value;
+            
+            showNotification('🤖 Historical Trend Agent: Analyzing SA coastal change patterns...', 'info');
+            
+            setTimeout(() => {
+                const years = period === 'Last 5 years' ? 5 : period === 'Last 10 years' ? 10 : 20;
+                const erosionData = [];
+                const seaLevelData = [];
+                const predictedErosion = [];
+                
+                for (let i = 0; i <= years; i++) {
+                    erosionData.push(-(i * 0.8 + Math.random() * 0.4).toFixed(1));
+                    seaLevelData.push((i * 1.9 + Math.random() * 0.8).toFixed(1));
+                    predictedErosion.push(-(i * 0.9 + Math.random() * 0.6).toFixed(1));
+                }
+                
+                charts.coastal.data.datasets[0].data = erosionData;
+                charts.coastal.data.datasets[1].data = seaLevelData;
+                charts.coastal.data.datasets[2].data = predictedErosion;
+                charts.coastal.update();
+                
+                showNotification(`🤖 Pattern Recognition Agent: Coastal analysis updated for ${region}`, 'success');
+            }, 2500);
+        }
+
+        // Utility functions
+        function generateRandomData(points, min, max) {
+            const data = [];
+            for (let i = 0; i < points; i++) {
+                data.push((Math.random() * (max - min) + min).toFixed(2));
+            }
+            return data;
+        }
+
+        function updateStats(module, stats) {
+            const statElements = {
+                deforestation: ['deforest-lost', 'deforest-increase', 'deforest-zones', 'deforest-alerts'],
+                wildfire: ['fire-index', 'fire-hotspots', 'fire-risk', 'fire-area'],
+                heat: ['heat-diff', 'heat-hottest', 'heat-green', 'heat-sensors'],
+                crops: ['crop-ndvi', 'crop-healthy', 'crop-fields', 'crop-yield'],
+                coastal: ['coastal-change', 'coastal-monitored', 'coastal-risk', 'coastal-zones']
+            };
+
+            if (statElements[module]) {
+                statElements[module].forEach((elementId, index) => {
+                    const element = document.getElementById(elementId);
+                    if (element && stats[Object.keys(stats)[index]]) {
+                        element.textContent = stats[Object.keys(stats)[index]];
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

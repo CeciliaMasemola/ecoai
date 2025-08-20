@@ -511,7 +511,7 @@
             <span style="color: #94a3b8; font-weight: 600;">Monitoring Agents:</span>
             <div class="agent-indicator">
                 <div class="agent-status active"></div>
-                <span>SPOT Satellite</span>
+                <span> Satellite</span>
             </div>
             <div class="agent-indicator">
                 <div class="agent-status active"></div>
@@ -519,7 +519,7 @@
             </div>
             <div class="agent-indicator">
                 <div class="agent-status processing"></div>
-                <span>DEA Sensors</span>
+                <span>Ground Sensors</span>
             </div>
         </div>
         <div class="agent-group">
@@ -571,7 +571,7 @@
                     <!-- Monitoring Agents -->
                     <div class="agent-card">
                         <div class="agent-header">
-                            <div class="agent-name">🛰️ SPOT Satellite Agent</div>
+                            <div class="agent-name">🛰️ Satellite Agent</div>
                             <button class="agent-toggle active" onclick="toggleAgent('satellite', this)"></button>
                         </div>
                         <div class="agent-metrics">
@@ -585,7 +585,7 @@
                             </div>
                         </div>
                         <div class="agent-log" id="satellite-log">
-                            <div class="log-entry success">[14:23:07] SPOT-7 data acquired for Kruger National Park</div>
+                            <div class="log-entry success">[14:23:07] Satellite data acquired for Kruger National Park</div>
                             <div class="log-entry info">[14:22:45] Processing Sentinel-2 imagery for deforestation in Limpopo</div>
                             <div class="log-entry success">[14:21:33] Change detection completed - 8 new alerts for Eastern Cape</div>
                         </div>
@@ -615,7 +615,7 @@
 
                     <div class="agent-card">
                         <div class="agent-header">
-                            <div class="agent-name">📡 DEA Ground Sensor Agent</div>
+                            <div class="agent-name">📡  Ground Sensor Agent</div>
                             <button class="agent-toggle active" onclick="toggleAgent('sensors', this)"></button>
                         </div>
                         <div class="agent-metrics">
@@ -837,7 +837,7 @@
 
             <div class="alert" id="deforest-alert">
                 <div class="alert-timestamp">14:23:07</div>
-                <strong>🤖 AI Alert - Critical Deforestation:</strong> SPOT Satellite Agent detected significant indigenous forest loss in Knysna area. Risk Assessment Agent recommends immediate investigation. Disaster Management Agent has been notified.
+                <strong>🤖 AI Alert - Critical Deforestation:</strong> Satellite Agent detected significant indigenous forest loss in Knysna area. Risk Assessment Agent recommends immediate investigation. Disaster Management Agent has been notified.
             </div>
 
             <div class="dashboard-grid">
@@ -1025,7 +1025,7 @@
 
             <div class="alert warning" id="crop-alert">
                 <div class="alert-timestamp">14:21:55</div>
-                <strong>🤖 AI Alert - Crop Stress Detected:</strong> DEA Ground Sensor Agent detected drought stress indicators in Free State maize fields. Risk Assessment Agent suggests irrigation intervention needed. Resource Allocation Agent coordinating with local agricultural extension services.
+                <strong>🤖 AI Alert - Crop Stress Detected:</strong>  Ground Sensor Agent detected drought stress indicators in Free State maize fields. Risk Assessment Agent suggests irrigation intervention needed. Resource Allocation Agent coordinating with local agricultural extension services.
             </div>
 
             <div class="dashboard-grid">
@@ -1266,7 +1266,7 @@
 
             const logMessages = {
                 satellite: [
-                    { msg: 'SPOT-7 data acquired for Kruger National Park', type: 'success' },
+                    { msg: 'Satellite  data acquired for Kruger National Park', type: 'success' },
                     { msg: 'Processing Sentinel-2 imagery for Limpopo deforestation', type: 'info' },
                     { msg: 'Change detection completed for Eastern Cape forests', type: 'success' },
                     { msg: 'Cloud coverage affecting Western Cape imagery', type: 'warning' }
@@ -1363,7 +1363,7 @@
                     type: 'deforestation',
                     message: 'Indigenous forest loss detected in Knysna area',
                     severity: 'warning',
-                    agent: 'SPOT Satellite Agent'
+                    agent: ' Satellite Agent'
                 },
                 {
                     type: 'wildfire',
@@ -1387,7 +1387,7 @@
                     type: 'crops',
                     message: 'Drought stress indicators found in Free State maize belt',
                     severity: 'warning',
-                    agent: 'DEA Ground Sensor Agent'
+                    agent: 'Ground Sensor Agent'
                 }
             ];
 
@@ -1503,7 +1503,7 @@
         // Add South African environmental data to maps
         function addDeforestationData() {
             const saForestAreas = [
-                {lat: -33.93, lng: 23.05, severity: 'high', agent: 'SPOT Satellite Agent', name: 'Knysna Forest'},
+                {lat: -33.93, lng: 23.05, severity: 'high', agent: ' Satellite Agent', name: 'Knysna Forest'},
                 {lat: -25.4, lng: 30.2, severity: 'medium', agent: 'Pattern Recognition', name: 'Mpumalanga Escarpment'},
                 {lat: -29.8, lng: 30.1, severity: 'low', agent: 'Historical Trend', name: 'KZN Coastal Forest'},
                 {lat: -23.9, lng: 29.8, severity: 'high', agent: 'Risk Assessment', name: 'Limpopo Woodlands'}
@@ -1528,7 +1528,7 @@
                 {lat: -33.9, lng: 18.4, risk: 'extreme', agent: 'SAWS Weather Agent', name: 'Western Cape Fynbos'},
                 {lat: -25.7, lng: 28.2, risk: 'high', agent: 'Risk Assessment', name: 'Mpumalanga Grasslands'},
                 {lat: -28.8, lng: 26.2, risk: 'moderate', agent: 'Pattern Recognition', name: 'Free State Plains'},
-                {lat: -32.0, lng: 26.0, risk: 'high', agent: 'SPOT Satellite Agent', name: 'Eastern Cape Karoo'}
+                {lat: -32.0, lng: 26.0, risk: 'high', agent: ' Satellite Agent', name: 'Eastern Cape Karoo'}
             ];
 
             saFireRiskAreas.forEach(area => {
@@ -1548,7 +1548,7 @@
         function addHeatIslandData() {
             const saHeatZones = [
                 {lat: -26.1951, lng: 28.0568, temp: 33.8, zone: 'Johannesburg CBD', agent: 'Ground Sensors'},
-                {lat: -26.1076, lng: 28.0567, temp: 29.2, zone: 'Johannesburg North', agent: 'SPOT Satellite Agent'},
+                {lat: -26.1076, lng: 28.0567, temp: 29.2, zone: 'Johannesburg North', agent: 'Satellite Agent'},
                 {lat: -26.2309, lng: 28.0583, temp: 35.1, zone: 'Johannesburg South', agent: 'Pattern Recognition'},
                 {lat: -26.1367, lng: 28.2411, temp: 27.9, zone: 'OR Tambo Area', agent: 'Thermal Analysis'}
             ];
@@ -1568,8 +1568,8 @@
 
         function addCropData() {
             const saCropFields = [
-                {lat: -28.3, lng: 26.8, health: 0.68, crop: 'Maize', agent: 'SPOT Satellite Agent', region: 'Free State'},
-                {lat: -26.0, lng: 28.5, health: 0.82, crop: 'Sunflower', agent: 'DEA Ground Sensors', region: 'Gauteng'},
+                {lat: -28.3, lng: 26.8, health: 0.68, crop: 'Maize', agent: ' Satellite Agent', region: 'Free State'},
+                {lat: -26.0, lng: 28.5, health: 0.82, crop: 'Sunflower', agent: ' Ground Sensors', region: 'Gauteng'},
                 {lat: -29.1, lng: 30.2, health: 0.71, crop: 'Sugarcane', agent: 'Pattern Recognition', region: 'KwaZulu-Natal'},
                 {lat: -33.8, lng: 19.0, health: 0.89, crop: 'Grapes', agent: 'Risk Assessment', region: 'Western Cape'}
             ];
@@ -1591,9 +1591,9 @@
         function addCoastalData() {
             const saCoastalPoints = [
                 {lat: -29.85, lng: 31.03, erosion: -1.2, agent: 'Historical Trend Agent', name: 'Ballito Beach'},
-                {lat: -34.1, lng: 18.3, erosion: -0.8, agent: 'SPOT Satellite Agent', name: 'Camps Bay'},
+                {lat: -34.1, lng: 18.3, erosion: -0.8, agent: ' Satellite Agent', name: 'Camps Bay'},
                 {lat: -33.97, lng: 25.6, erosion: -2.1, agent: 'Pattern Recognition', name: 'Plettenberg Bay'},
-                {lat: -33.0, lng: 27.9, erosion: -1.5, agent: 'DEA Ground Sensors', name: 'East London Coast'}
+                {lat: -33.0, lng: 27.9, erosion: -1.5, agent: ' Ground Sensors', name: 'East London Coast'}
             ];
 
             saCoastalPoints.forEach(point => {
@@ -1857,7 +1857,7 @@
             const startDate = document.getElementById('start-date').value;
             const endDate = document.getElementById('end-date').value;
             
-            showNotification('🤖 SPOT Satellite Agent: Analyzing SA forest patterns...', 'info');
+            showNotification('🤖 Satellite Agent: Analyzing SA forest patterns...', 'info');
             
             setTimeout(() => {
                 const newData = generateRandomData(5, 800, 2500);
@@ -1908,7 +1908,7 @@
             const city = document.getElementById('heat-city').value;
             const season = document.getElementById('heat-season').value;
             
-            showNotification('🤖 DEA Ground Sensor Agent: Processing thermal data...', 'info');
+            showNotification('🤖  Ground Sensor Agent: Processing thermal data...', 'info');
             
             setTimeout(() => {
                 const baseTemps = [33.8, 31.2, 32.5, 28.9, 30.1, 29.7];
@@ -1931,7 +1931,7 @@
             const region = document.getElementById('crop-region').value;
             const cropType = document.getElementById('crop-type').value;
             
-            showNotification('🤖 SPOT Satellite Agent: Processing multispectral imagery...', 'info');
+            showNotification('🤖 Satellite Agent: Processing multispectral imagery...', 'info');
             
             setTimeout(() => {
                 const newNDVI = generateRandomData(12, 0.2, 0.8);
